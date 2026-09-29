@@ -104,6 +104,31 @@ exit /b 1
 echo.
 echo [3/4] Update completed successfully!
 echo.
+
+:: If the update shipped the new updater as RobloxPortableUpdater.exe_NEW,
+:: replace the old exe with it (retrying until the old one is no longer locked).
+set "SELF_NEW=%SELF_EXE%_NEW"
+if not exist "%SELF_NEW%" goto :restart
+
+echo Replacing the updater with the new version...
+set /a TRIES=0
+
+:swapself
+move /y "%SELF_NEW%" "%SELF_EXE%" >nul 2>&1
+if not exist "%SELF_NEW%" goto :restart
+set /a TRIES+=1
+if %TRIES% GEQ 20 (
+    echo.
+    echo [ERROR] Could not replace RobloxPortableUpdater.exe with the new version.
+    echo The new file was left as: %SELF_NEW%
+    echo Close the program and rename it manually.
+    pause
+    exit /b 1
+)
+ping 127.0.0.1 -n 2 > nul
+goto :swapself
+
+:restart
 echo [4/4] Restarting application...
 start "" "%SELF_EXE%"
 
